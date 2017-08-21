@@ -1,0 +1,215 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Smartphone</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'Zhuge_smartphone/gsensor.css' %}">
+</head>
+<body>
+
+    <main>
+        <h2>Smartphone No.{{ smartphone_index }}</h2>
+
+        <section> <h6>Acceleration</h6>  </section>
+
+        <section id="Ax">
+            <label><i>x</i></label>
+            <span></span>
+        </section>
+        <section id="Ay">
+            <label><i>y</i></label>
+            <span></span>
+        </section>
+        <section id="Az">
+            <label><i>z</i></label>
+            <span></span>
+        </section>
+<!--
+        <section>
+            <button id="adjust">Adjust</button>
+            <button id="reset">Reset</button>
+        </section>
+-->
+         <section><span>&nbsp;</span></section>
+
+         <section> <h6>Gyroscope</h6> </section>
+         <section id="Rx">
+            <label><i>&alpha;</i></label>
+            <span></span>
+        </section>
+        <section id="Ry">
+            <label><i>&beta;</i></label>
+            <span></span>
+        </section>
+         <section id="Rz">
+            <label><i>&gamma;</i></label>
+            <span></span>
+        </section>
+
+         <section><span>&nbsp;</span></section>
+
+         <section> <h6>Orientation</h6> </section>
+         <section id="Ox">
+            <label><i>&alpha;</i></label>
+            <span></span>
+        </section>
+        <section id="Oy">
+            <label><i>&beta;</i></label>
+            <span></span>
+        </section>
+         <section id="Oz">
+            <label><i>&gamma;</i></label>
+            <span></span>
+        </section>
+
+    </main>
+
+
+    <script type="text/javascript" src="{% static 'Zhuge_smartphone/jquery-3.1.1.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'Zhuge_smartphone/iottalk-api.js' %}"></script>
+    <script type="text/javascript">
+        window.mac = "{{my_reg_name}}";
+        window.d_name = "{{my_d_name}}";
+
+        var interval = 250;
+        var accur = 10;
+        var eps = 0.001;
+
+        var acc  = {};
+        var gyro = {};
+        var orient = {};
+        var offset = { ax: 0, ay: 0, az: 0 };
+        var output = {};
+        var AxDom = $('#Ax > span');
+        var AyDom = $('#Ay > span');
+        var AzDom = $('#Az > span');
+        var RxDom = $('#Rx > span');
+        var RyDom = $('#Ry > span');
+        var RzDom = $('#Rz > span');
+        var OxDom = $('#Ox > span');
+        var OyDom = $('#Oy > span');
+        var OzDom = $('#Oz > span');
+   
+
+        window.ondevicemotion = function(event) {
+            var ax = event.accelerationIncludingGravity.x || 0;
+            var ay = event.accelerationIncludingGravity.y || 0;
+            var az = event.accelerationIncludingGravity.z || 0;
+            acc.x = Math.round(ax*accur) / accur;
+            acc.y = Math.round(ay*accur) / accur;
+            acc.z = Math.round(az*accur) / accur;
+
+            var ra = event.rotationRate.alpha;  
+            var rb = event.rotationRate.beta;
+            var rg = event.rotationRate.gamma;
+            gyro.x = Math.round(rg*accur) / accur;
+            gyro.y = Math.round(ra*accur) / accur;
+            gyro.z = Math.round(rb*accur) / accur;
+        }
+
+        $('#adjust').click(function() {
+            offset.ax = -gsensor.ax;
+            offset.ay = -gsensor.ay;
+            offset.az = -gsensor.az;
+        });
+
+        $('#reset').click(function() {
+            offset.ax = 0;
+            offset.ay = 0;
+            offset.az = 0;
+        });
+
+
+        function handleOrientation(event) {
+            var oa = event.alpha;
+            var ob = event.beta;
+            var og = event.gamma;
+            orient.x = Math.round(oa*accur) / accur;
+            orient.y = Math.round(ob*accur) / accur;
+            orient.z = Math.round(og*accur) / accur;
+        }
+        window.addEventListener('deviceorientation', handleOrientation);
+
+        // Dom updater
+        function domUpdater() {
+            AxDom.text(acc.x);
+            AyDom.text(acc.y);
+            AzDom.text(acc.z);
+
+            RxDom.text(gyro.x);
+            RyDom.text(gyro.y);
+            RzDom.text(gyro.z);
+
+            OxDom.text(orient.x);
+            OyDom.text(orient.y);
+            OzDom.text(orient.z);
+
+            requestAnimationFrame(domUpdater);
+        }
+        requestAnimationFrame(domUpdater);
+
+
+        // IoTtalk updater
+        function iotUpdater() {
+            if( window.d_name ){
+                IoTtalk.update(mac, 'Acceleration', [acc.x, acc.y, acc.z]);
+                IoTtalk.update(mac, 'Gyroscope', [gyro.x, gyro.y, gyro.z]);
+                IoTtalk.update(mac, 'Orientation', [orient.x, orient.y, orient.z]);
+            }    
+            setTimeout(iotUpdater, interval);
+        }
+        //setTimeout(iotUpdater, interval);
+
+
+        // Register
+        /*
+        IoTtalk.register(mac, {
+            'dm_name': 'Smartphone',
+            'is_sim': false,
+            'df_list': ['Acceleration','Gyroscope','Orientation'],
+        }, function(ret) {
+            console.log(ret);
+            ret = JSON.parse(ret);
+            window.d_name = ret.d_name;
+            $('main > h2').text(ret.d_name);
+        });
+        */
+        function release_smartphone(smartphone_index, callback) {
+            $.ajax({
+                type: "GET",
+                url: 'http://192.168.100.5:8000/smartphone/' + smartphone_index + '/release',
+                success: function(res) {
+                    console.log(res);
+                    console.log('release success');
+                },
+                error: function(err, st) {
+                    console.log(err);
+                    console.log(st);
+                    console.log('release failed');
+                },
+                complete: function() {
+                    if( typeof callback === 'function' )
+                        callback();
+                },
+                dataType: 'text',
+            });
+        }
+        // Detach when browser close
+        function detach() {
+            window.d_name = null;
+            //IoTtalk.detach(mac);
+            console.log('release detach');
+            release_smartphone({{ smartphone_index }});
+        }
+        window.onunload = detach;
+        window.onbeforeunload = detach;
+        window.onclose = detach;
+        window.onpagehide = detach;
+
+    </script>
+
+</body>
+</html>
