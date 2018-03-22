@@ -5,7 +5,7 @@ function register(mac, profile, callback) {
     var ret = null;
     $.ajax({
         type: 'POST',
-        url: '/' + mac,
+        url: 'http://140.113.199.199:9999/' + mac,
         contentType: "application/json; charset=utf-8",
         data: JSON.stringify({'profile': profile}),
         success: function(res) {
@@ -30,7 +30,7 @@ function register(mac, profile, callback) {
 function detach(mac, callback) {
     $.ajax({
         type: "DELETE",
-        url: '/' + mac,
+        url: 'http://140.113.199.199:9999/' + mac,
         success: function(res) {
             console.log(res);
             console.log('Detach success');
@@ -52,7 +52,7 @@ function detach(mac, callback) {
 function update(mac, feature, data, callback) {
     $.ajax({
         type: "PUT",
-        url: '/' + mac + '/' + feature,
+        url: 'http://140.113.199.199:9999/' + mac + '/' + feature,
         contentType: "application/json; charset=utf-8",
         data: JSON.stringify({'data': data}),
         error: function(err, st) {
@@ -74,10 +74,10 @@ function get(mac, feature, callback) {
     $.ajax({
         type: "GET",
         cache: false,
-        url: '/' + mac + '/' + feature,
+        url: 'http://140.113.199.199:9999/' + mac + '/' + feature,
         success: function(res) {
             ret = JSON.parse(res);
-            if( typeof ret !== 'object' || 
+            if( typeof ret !== 'object' ||
                     !ret['samples'] ||
                     !ret['samples'][0] ||
                     !ret['samples'][0][1] )
@@ -95,12 +95,12 @@ function get(mac, feature, callback) {
                 callback(ret);
         },
         dataType: 'text',
-    });   
+    });
 }
 
 
 
-
+//qqaqq
 // Export to browser's global for debug
 window.IoTtalk = {
     register: register,

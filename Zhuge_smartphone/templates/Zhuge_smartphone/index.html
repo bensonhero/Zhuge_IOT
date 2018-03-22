@@ -92,7 +92,7 @@
         var OxDom = $('#Ox > span');
         var OyDom = $('#Oy > span');
         var OzDom = $('#Oz > span');
-   
+
 
         window.ondevicemotion = function(event) {
             var ax = event.accelerationIncludingGravity.x || 0;
@@ -102,7 +102,7 @@
             acc.y = Math.round(ay*accur) / accur;
             acc.z = Math.round(az*accur) / accur;
 
-            var ra = event.rotationRate.alpha;  
+            var ra = event.rotationRate.alpha;
             var rb = event.rotationRate.beta;
             var rg = event.rotationRate.gamma;
             gyro.x = Math.round(rg*accur) / accur;
@@ -158,29 +158,53 @@
                 IoTtalk.update(mac, 'Acceleration', [acc.x, acc.y, acc.z]);
                 IoTtalk.update(mac, 'Gyroscope', [gyro.x, gyro.y, gyro.z]);
                 IoTtalk.update(mac, 'Orientation', [orient.x, orient.y, orient.z]);
-            }    
+            }
             setTimeout(iotUpdater, interval);
         }
-        //setTimeout(iotUpdater, interval);
-
+        setTimeout(iotUpdater, interval);
 
         // Register
-        /*
+
         IoTtalk.register(mac, {
             'dm_name': 'Smartphone',
             'is_sim': false,
             'df_list': ['Acceleration','Gyroscope','Orientation'],
+            'd_name': '{{my_d_name}}',
         }, function(ret) {
             console.log(ret);
             ret = JSON.parse(ret);
             window.d_name = ret.d_name;
             $('main > h2').text(ret.d_name);
         });
-        */
+
+        function subscribe_smartphone(smartphone_index, callback) {
+            $.ajax({
+                type: "GET",
+                url: '/smartphone/' + smartphone_index + '/subscribe',
+                success: function(res) {
+                    console.log(res);
+                    console.log('subscribe success');
+                },
+                error: function(err, st) {
+                    console.log(err);
+                    console.log(st);
+                    console.log('subscribe failed');
+                },
+                complete: function() {
+                    if( typeof callback === 'function' )
+                        callback();
+                },
+                dataType: 'text',
+            });
+            setTimeout(function(){subscribe_smartphone({{smartphone_index}});}, 5000);
+            return false;
+        }
+        setTimeout(function(){subscribe_smartphone({{smartphone_index}});}, 5000);
+
         function release_smartphone(smartphone_index, callback) {
             $.ajax({
                 type: "GET",
-                url: 'http://192.168.100.5:8000/smartphone/' + smartphone_index + '/release',
+                url: '/smartphone/' + smartphone_index + '/release',
                 success: function(res) {
                     console.log(res);
                     console.log('release success');
@@ -196,18 +220,20 @@
                 },
                 dataType: 'text',
             });
+            return false;
         }
         // Detach when browser close
         function detach() {
             window.d_name = null;
             //IoTtalk.detach(mac);
-            console.log('release detach');
             release_smartphone({{ smartphone_index }});
         }
+
         window.onunload = detach;
         window.onbeforeunload = detach;
         window.onclose = detach;
         window.onpagehide = detach;
+
 
     </script>
 

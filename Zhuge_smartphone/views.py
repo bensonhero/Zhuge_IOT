@@ -5,12 +5,17 @@ from django.shortcuts import render
 from django.http import HttpResponse
 
 from .models import UserAvatar
+from datetime import datetime as dt
+from datetime import timedelta
 # Create your views here.
 
 def index(request):
 	avatar_available_set = UserAvatar.objects.filter(isOccupied = False)
+	if(avatar_available_set.count()<=0):
+	    avatar_available_set = UserAvatar.objects.filter(lastused__lt = dt.now() - timedelta(seconds=10))
 	if(avatar_available_set.count()>0):
 		avatar_selected = avatar_available_set[0]
+		avatar_selected.lastused = dt.now()
 		avatar_selected.isOccupied = True
 		avatar_selected.save()
 		context = {
@@ -21,11 +26,11 @@ def index(request):
 		return render(request, 'Zhuge_smartphone/index.html', context)
 	else:
 		return render(request, 'Zhuge_smartphone/lobbyfull.html', {})
-	
+
 def release_smartphone(request, smartphone_index):
 	try:
 		avatar_checked = UserAvatar.objects.get(avatar_index = int(smartphone_index))
-		avatar_checked.isOccupied = False 
+		avatar_checked.isOccupied = False
 		avatar_checked.save()
 		return HttpResponse("release smartphone {}".format(smartphone_index))
 	except:
@@ -50,6 +55,19 @@ def check_smartphone(request, smartphone_index):
 			return HttpResponse("smartphone {} is available".format(smartphone_index))
 	except(UserAvatar.DoesNotExist):
 		return HttpResponse("smartphone {} not exist".format(smartphone_index))
-	
 
+def subscribe_smartphone(request,smartphone_index):
+    try:
+        avatar_checked = UserAvatar.objects.get(avatar_index = int(smartphone_index))
+        avatar_checked.lastused = dt.now()
+        avatar_checked.save()
+        return HttpResponse("subscribe smartphone {} sucess".format(smartphone_index))
+    except(UserAvatar.DoesNotExist):
+        return HttpResponse("smartphone {} not exist".format(smartphone_index))
 
+def getOnlinePlayerNum(request):
+    try:
+        avatar_available_set = UserAvatar.objects.filter(lastused__gte = dt.now() - timedelta(seconds=10))
+        return HttpResponse("{}".format(avatar_available_set.count()))
+    except:
+        return HttpResponse("0")
