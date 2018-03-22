@@ -65,9 +65,35 @@ def subscribe_smartphone(request,smartphone_index):
     except(UserAvatar.DoesNotExist):
         return HttpResponse("smartphone {} not exist".format(smartphone_index))
 
+def update_shake(request,smartphone_index,shake_value):
+    try:
+        avatar_checked = UserAvatar.objects.get(avatar_index = int(smartphone_index))
+        avatar_checked.shake_val = int(shake_value)
+        avatar_checked.save()
+        return HttpResponse("subscribe smartphone {} sucess".format(smartphone_index))
+    except(UserAvatar.DoesNotExist):
+        return HttpResponse("smartphone {} not exist".format(smartphone_index))
+
 def getOnlinePlayerNum(request):
     try:
         avatar_available_set = UserAvatar.objects.filter(lastused__gte = dt.now() - timedelta(seconds=10))
         return HttpResponse("{}".format(avatar_available_set.count()))
+    except:
+        return HttpResponse("0")
+
+def getShakeValue(request):
+    try:
+        avatar_available_set = UserAvatar.objects.filter(lastused__gte = dt.now() - timedelta(seconds=10))
+        value = 0
+        for avatar in avatar_available_set:
+            value += avatar.shake_val
+        return HttpResponse("{}".format(value))
+    except:
+        return HttpResponse("0")
+
+def getPhoneValue(request,smartphone_index):
+    try:
+        avatar_checked = UserAvatar.objects.get(avatar_index = int(smartphone_index))
+        return HttpResponse("{}".format(avatar_checked.shake_val))
     except:
         return HttpResponse("0")

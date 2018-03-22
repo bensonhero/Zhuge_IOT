@@ -12,6 +12,7 @@ class UserAvatar(models.Model):
 	isOccupied = models.BooleanField(default = False)
 	user_name = models.CharField(max_length = 100)
 	lastused = models.DateTimeField(default = datetime.now, blank=True)
+	shake_val = models.IntegerField(default = 0)
 	def __str__(self):
 		return 'smartphone {}'.format(self.avatar_index)
 
